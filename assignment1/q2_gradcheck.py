@@ -37,7 +37,16 @@ def gradcheck_naive(f, x):
         # to test cost functions with built in randomness later.
 
         ### YOUR CODE HERE:
-        raise NotImplementedError
+        modifier = np.zeros(x.shape)
+        modifier[ix] = 1
+
+        random.setstate(rndstate)
+        fprev = f(x - h*modifier)[0]
+
+        random.setstate(rndstate)
+        fnext = f(x + h*modifier)[0]
+
+        numgrad = (fnext - fprev) / (2*h)
         ### END YOUR CODE
 
         # Compare gradients
@@ -76,7 +85,14 @@ def your_sanity_checks():
     """
     print "Running your sanity checks..."
     ### YOUR CODE HERE
-    raise NotImplementedError
+    # Function must output a scalar value
+    sigmoid = lambda x: (np.sum(1/(1 + np.exp(-x))),
+            (1/(1 + np.exp(-x))) * (1 - (1/(1 + np.exp(-x)))))
+
+    gradcheck_naive(sigmoid, np.array(123.456))      # scalar test
+    gradcheck_naive(sigmoid, np.random.randn(3,))    # 1-D test
+    gradcheck_naive(sigmoid, np.random.randn(4,5))   # 2-D test
+    print ""
     ### END YOUR CODE
 
 

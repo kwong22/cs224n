@@ -40,11 +40,30 @@ def forward_backward_prop(X, labels, params, dimensions):
 
     # Note: compute cost based on `sum` not `mean`.
     ### YOUR CODE HERE: forward propagation
-    raise NotImplementedError
+    z1 = np.dot(X, W1) + b1
+    h = sigmoid(z1)
+
+    z2 = np.dot(h, W2) + b2
+    ypred = softmax(z2)
+
+    # Compute cross entropy loss
+    cost = -np.sum(labels * np.log(ypred))
     ### END YOUR CODE
 
     ### YOUR CODE HERE: backward propagation
-    raise NotImplementedError
+    dz2 = ypred - labels
+
+    # z2 = np.dot(h, W2) + b2
+    gradb2 = np.sum(dz2, axis=0)
+    gradW2 = np.dot(h.T, dz2)
+    dh = np.dot(dz2, W2.T)
+
+    # h = sigmoid(z1)
+    dz1 = sigmoid_grad(h) * dh
+
+    # z1 = np.dot(X, W1) + b1
+    gradb1 = np.sum(dz1, axis=0)
+    gradW1 = np.dot(X.T, dz1)
     ### END YOUR CODE
 
     ### Stack gradients (do not modify)
@@ -84,7 +103,18 @@ def your_sanity_checks():
     """
     print "Running your sanity checks..."
     ### YOUR CODE HERE
-    raise NotImplementedError
+    N = 1
+    dimensions = [1, 1, 1]
+    data = np.random.randn(N, dimensions[0])   # each row will be a datum
+    labels = np.zeros((N, dimensions[2]))
+    for i in xrange(N):
+        labels[i, random.randint(0,dimensions[2]-1)] = 1
+
+    params = np.random.randn((dimensions[0] + 1) * dimensions[1] + (
+        dimensions[1] + 1) * dimensions[2], )
+
+    gradcheck_naive(lambda params:
+        forward_backward_prop(data, labels, params, dimensions), params)
     ### END YOUR CODE
 
 
