@@ -31,12 +31,16 @@ def softmax(x):
     if len(x.shape) > 1:
         # Matrix
         ### YOUR CODE HERE
-        raise NotImplementedError
+        x_max = np.amax(x, axis=1, keepdims=True)
+        exp_x = np.exp(x - x_max)
+        x = exp_x / np.sum(exp_x, axis=1, keepdims=True)
         ### END YOUR CODE
     else:
         # Vector
         ### YOUR CODE HERE
-        raise NotImplementedError
+        x_max = np.amax(x)
+        exp_x = np.exp(x - x_max)
+        x = exp_x / np.sum(exp_x)
         ### END YOUR CODE
 
     assert x.shape == orig_shape
@@ -78,7 +82,27 @@ def test_softmax():
     """
     print "Running your tests..."
     ### YOUR CODE HERE
-    raise NotImplementedError
+    test1 = softmax(np.array([0, 0, 0]))
+    print test1
+    ans1 = np.array([0.33333333, 0.33333333, 0.33333333])
+    assert np.allclose(test1, ans1, rtol=1e-05, atol=1e-06)
+
+    test2 = softmax(np.array([0]))
+    print test2
+    ans2 = np.array([1])
+    assert np.allclose(test2, ans2, rtol=1e-05, atol=1e-06)
+
+    test3 = softmax(np.array([[0]]))
+    print test3
+    ans3 = np.array([1])
+    assert np.allclose(test3, ans3, rtol=1e-05, atol=1e-06)
+
+    test4 = softmax(np.array([[0, 0, 0], [1, 1, 1], [0, 1, 0]]))
+    print test4
+    ans4 = np.array([[0.33333333, 0.33333333, 0.33333333],
+        [0.33333333, 0.33333333, 0.33333333],
+        [0.2119416, 0.5761169, 0.2119416]])
+    assert np.allclose(test4, ans4, rtol=1e-05, atol=1e-06)
     ### END YOUR CODE
 
 
