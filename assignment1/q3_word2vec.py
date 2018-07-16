@@ -110,17 +110,19 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     indices.extend(getNegativeSamples(target, dataset, K))
 
     ### YOUR CODE HERE
-    # Calculate cost and gradients using subset of outputVectors
-    neg_indices = indices[1:] # exclude the target index
-    cost, gradPred, neg_samples_grad = softmaxCostAndGradient(predicted,
-            target,
-            outputVectors[neg_indices],
-            dataset)
+    sign = -np.ones((len(indices), 1)) # (K+1,1)
+    sign[0] = 1
+    predicted = predicted[:, np.newaxis] # (D,1)
+    sig_scores = sigmoid(np.dot(sign * outputVectors[indices], predicted)) # (K+1,1)
+
+    cost = -np.sum(np.log(sig_scores))
+    
+    gradPred = np.sum(-sign * (1 - sig_scores) * outputVectors[indices], axis=0)
 
     # Assign gradients to corresponding word vectors
     grad = np.zeros(outputVectors.shape)
-    for k in range(K):
-        grad[neg_indices[k]] += neg_samples_grad[k]
+    for i in range(len(indices)):
+        grad[indices[i]] += -sign[i] * (1 - sig_scores[i]) * predicted.flatten()
     ### END YOUR CODE
 
     return cost, gradPred, grad
@@ -158,16 +160,16 @@ def skipgram(currentWord, C, contextWords, tokens, inputVectors, outputVectors,
     pred_ind = tokens[currentWord]
     predicted = inputVectors[pred_ind]
 
-    for i in range(len(contextWords)):
-        context_ind = tokens[contextWords[i]]
-        cost_temp, gradPred_temp, grad_temp = word2vecCostAndGradient(predicted,
+    for w in contextWords:
+        context_ind = tokens[w]
+        cost_temp, gradPred, grad = word2vecCostAndGradient(predicted,
                 context_ind,
                 outputVectors,
                 dataset)
 
         cost += cost_temp
-        gradIn[pred_ind] += gradPred_temp
-        gradOut += grad_temp
+        gradIn[pred_ind] += gradPred
+        gradOut += grad
     ### END YOUR CODE
 
     return cost, gradIn, gradOut
