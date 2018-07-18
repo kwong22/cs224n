@@ -21,6 +21,13 @@ class PartialParse(object):
         self.sentence = sentence
 
         ### YOUR CODE HERE
+        self.stack = ['ROOT']
+
+        self.buffer = []
+        for word in sentence:
+            self.buffer.append(word)
+
+        self.dependencies = []
         ### END YOUR CODE
 
     def parse_step(self, transition):
@@ -32,6 +39,17 @@ class PartialParse(object):
                         transition.
         """
         ### YOUR CODE HERE
+        if transition == 'S':
+            # Remove first item of buffer and add it to top of stack
+            self.stack.append(self.buffer.pop(0))
+        elif transition == 'LA':
+            # Add dependency (first item of stack, second item of stack), and
+            # remove second item
+            self.dependencies.append((self.stack[-1], self.stack.pop(-2)))
+        elif transition == 'RA':
+            # Add dependency (second item of stack, first item of stack), and
+            # remove first item
+            self.dependencies.append((self.stack[-2], self.stack.pop(-1)))
         ### END YOUR CODE
 
     def parse(self, transitions):
@@ -66,6 +84,22 @@ def minibatch_parse(sentences, model, batch_size):
     """
 
     ### YOUR CODE HERE
+    partial_parses = [PartialParse(sentence) for sentence in sentences]
+    unfinished_parses = partial_parses[:] # shallow copy references objects in the original
+
+    while len(unfinished_parses) > 0:
+        batch = unfinished_parses[:batch_size] # takes all elements if batch_size > len(unfinished_parses)
+        transitions = model.predict(batch)
+        for i in range(len(batch)):
+            batch[i].parse_step(transitions[i])
+
+        # Remove completed parses from unfinished_parses
+        for i in reversed(range(len(batch))):
+            if (len(batch[i].buffer) == 0) & (len(batch[i].stack) == 1):
+                unfinished_parses.pop(i)
+
+    # Partial parses were modified because shallow copy was used
+    dependencies = [partial_parse.dependencies for partial_parse in partial_parses]
     ### END YOUR CODE
 
     return dependencies
